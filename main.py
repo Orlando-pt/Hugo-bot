@@ -1,8 +1,13 @@
 import discord
+import os
+
+from query import queries
 
 class HugoBot(discord.Client):
     async def on_ready(self):
-        pass
+        print(f'{self.user} has connected to the server!')
+
+        self.prefix = '$ask '
 
     async def on_message(self, message):
 
@@ -10,11 +15,14 @@ class HugoBot(discord.Client):
         if message.author == self.user:
             return
 
-        pass
+        if message.content.startswith(self.prefix):
+            
+            query = message.content[len(self.prefix):]
+
+            if queries[query.lower()] == 0:
+                await message.channel.send('É um borro')
+
 
 if __name__ == "__main__":
-    intents = discord.Intents.default()
-    intents.message_content = True
-
-    client = HugoBot(intents=intents)
-    client.run('OTU5NTA1NzA4NDE0NTM3ODY4.Ykc3Uw.S6kFnnYQ3YD5iOV0E7OTBZ5F6WE')
+    client = HugoBot()
+    client.run(os.getenv('DISCORD_TOKEN'))
