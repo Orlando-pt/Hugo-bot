@@ -1,2 +1,2 @@
 # Hugo-bot
-Discord bot that tells about Hugo.
+Discord bot that shows the next CNFT drops.
