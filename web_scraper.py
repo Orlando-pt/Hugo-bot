@@ -29,8 +29,11 @@ class WebScraper:
         firefox_options.headless = True
         self.driver = webdriver.Firefox(options=firefox_options)
 
-    def drops_for_today(self):
-        self.today = date.today().day
+    def drops_for_today(self, day=None):
+        if day:
+            self.today = day
+        else:
+            self.today = date.today().day
 
         page_source = self.__fetch_site_html()
         # with open('pagesource2.html', 'r') as file:
@@ -39,7 +42,7 @@ class WebScraper:
         drops_information = self.__drops_information_from_page_source(
             page_source=page_source)
 
-        self.driver.close()
+        # self.driver.close()       # check why this wasn't working
 
         return drops_information
 

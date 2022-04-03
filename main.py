@@ -14,20 +14,20 @@ bot = interactions.Client(token=DISCORD_TOKEN)
 @bot.command(
     name="todays_drops",
     description="Cardano drops for today.",
-    # scope=DISCORD_GUILD,
-    # options = [
-    #     interactions.Option(
-    #         name="day",
-    #         description="Day you want to see",
-    #         type=interactions.OptionType.INTEGER,
-    #         required=False,
-    #     ),
-    # ],
+    scope=DISCORD_GUILD,
+    options = [
+        interactions.Option(
+            name="day",
+            description="Day you want to see",
+            type=interactions.OptionType.INTEGER,
+            required=False,
+        ),
+    ],
 )
-async def todays_drops(ctx: interactions.CommandContext):
+async def todays_drops(ctx: interactions.CommandContext, day: int = None):
     await ctx.send('This might take a little while. Have a coffee in the meantime :wink:')
 
-    drops = scraper.drops_for_today()
+    drops = scraper.drops_for_today(day)
     drops_json = '```json\n' + json.dumps(drops, indent=2) + '\n```'
     await ctx.send(f"Drops for today:\n{drops_json}")
 
