@@ -1,28 +1,29 @@
-import discord
 import os
+import interactions
 
-from query import queries
+import sqlite3
 
-class HugoBot(discord.Client):
-    async def on_ready(self):
-        print(f'{self.user} has connected to the server!')
+# conn = sqlite3.connect('test.db')
 
-        self.prefix = '$ask '
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_GUILD = int(os.getenv('DISCORD_GUILD'))
 
-    async def on_message(self, message):
+bot = interactions.Client(token=DISCORD_TOKEN)
+@bot.command(
+    name="say_something",
+    description="say something!",
+    scope=DISCORD_GUILD,
+    options = [
+        interactions.Option(
+            name="text",
+            description="What you want to say",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+    ],
+)
+async def say_something(ctx: interactions.CommandContext, text: str):
+    await ctx.send(f"You said '{text}'!")
 
-        # don't responde to ourselves
-        if message.author == self.user:
-            return
 
-        if message.content.startswith(self.prefix):
-            
-            query = message.content[len(self.prefix):]
-
-            if queries[query.lower()] == 0:
-                await message.channel.send('É um borro')
-
-
-if __name__ == "__main__":
-    client = HugoBot()
-    client.run(os.getenv('DISCORD_TOKEN'))
+bot.start()
