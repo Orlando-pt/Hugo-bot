@@ -24,14 +24,13 @@ class WebScraper:
     def __init__(self):
         self.website = 'https://www.cnftcalendar.com/'
         self.delay = 7
-        # self.today = date.today().day
-        self.today = 4
 
         firefox_options = Options()
         firefox_options.headless = True
         self.driver = webdriver.Firefox(options=firefox_options)
 
     def drops_for_today(self):
+        self.today = date.today().day
 
         page_source = self.__fetch_site_html()
         # with open('pagesource2.html', 'r') as file:
@@ -120,19 +119,19 @@ class WebScraper:
 
         paragraphs = long_description.find_all('p')
 
-        print(long_description.get_text().strip())
-
+        # try to parse the standar way (with <p>)
+        #
+        # sometimes the description comes with <br />, that's
+        # the reason behing the except
         try:
             supply = paragraphs[2].get_text().split(' ')[1].strip()
             price = paragraphs[3].get_text().strip()[7:]
             website = paragraphs[5].get_text().strip()[9:]
             discord = paragraphs[6].get_text().strip()[9:]
         except Exception:
-            supply = None
-            price = None
-            website = None
-            discord = None
-            print('Error parsing long description.')
+            supply, price, website, discord = self.__find_long_description_attr(
+                long_description
+            )
 
         return {
             'name': name,
@@ -144,6 +143,26 @@ class WebScraper:
             'discord': discord
         }
 
+    def __find_long_description_attr(self, long_description):
+        long_description_text = long_description.get_text().strip()
+
+        positions = [
+            long_description_text.find('Supply'),
+            long_description_text.find('Price'),
+            long_description_text.find('Website'),
+            long_description_text.find('Discord')
+        ]
+
+        # TODO sometimes some fields may not be available
+        # treat that type of situation
+
+        supply = long_description_text[positions[0]+8:positions[1]]
+        price = long_description_text[positions[1]+7:positions[2]]
+        website = long_description_text[positions[2]+9:positions[3]]
+        discord = long_description_text[positions[3]+9:]
+
+        return (supply, price, website, discord)
+    
 
 if __name__ == '__main__':
     app = WebScraper()
