@@ -7,6 +7,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+from datetime import date
+
 """
 
 For this code to work the GECKODRIVER needs
@@ -15,44 +17,140 @@ to be installed.
 Also, it needs to be on one of the $PATH directories, so
 one option is to copy the GECKODRIVER to /usr/local/bin.
 """
+
+
 class WebScraper:
 
     def __init__(self):
         self.website = 'https://www.cnftcalendar.com/'
         self.delay = 7
-        
+        # self.today = date.today().day
+        self.today = 4
+
         firefox_options = Options()
         firefox_options.headless = True
         self.driver = webdriver.Firefox(options=firefox_options)
-        
-    def today_dops(self):
+
+    def drops_for_today(self):
+
+        page_source = self.__fetch_site_html()
+        # with open('pagesource2.html', 'r') as file:
+            # page_source = file.read()
+
+        drops_information = self.__drops_information_from_page_source(
+            page_source=page_source)
+
+        self.driver.close()
+
+        return drops_information
+
+    def __fetch_site_html(self):
+        """Use selenium to fetch the information from the CNFT calendar site.
+
+        This function returns the html source code of the fetched web page.
+        """
         self.driver.get(self.website)
-        
-        print('Finding drop information...')
+
+        print('Searching for today\'s drops information.')
         try:
             WebDriverWait(self.driver, self.delay).until(
-                EC.presence_of_element_located((By.CLASS_NAME, 'calendar-list-event'))
+                EC.element_to_be_clickable(
+                    (By.CLASS_NAME, 'calendar-list-event'))
             )
-            print('Necessary information found!')
+            print('Information found!')
         except TimeoutException:
             print('Loading took to much time')
             self.driver.quit()
             return
 
-        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+        # click on the div to get all the information on the drop
+        for elem in self.driver.find_elements(By.CLASS_NAME, 'calendar-list-event'):
+            elem.click()
 
-        for drop in soup.find_all('span', {'class': 'calendar-list-event__time'}):
-            drop_time = drop.find('span').get_text().strip()
+        # with open('pagesource2.html', 'w') as file:
+            # file.write(self.driver.page_source)
 
-            print(drop_time)
-        
-        self.driver.close()
+        return self.driver.page_source
+
+    def __drops_information_from_page_source(self, page_source):
+        soup = BeautifulSoup(page_source, 'html.parser')
+        drops = []
+
+        for div in soup.find_all('div', {'class': 'calendar-list-event__header'}):
+
+            day = div.find_next(
+                'div',
+                {'class': 'calendar-list-event__date__day'}
+            ).get_text().strip()
+
+            if self.__check_drop_day(day):
+                drops.append(self.__retrieve_drop_information(div))
+
+        return drops
+
+    def __check_drop_day(self, day):
+        try:
+            return int(day) == self.today
+        except Exception:
+            return False
+    
+    def __retrieve_drop_information(self, drop):
+        name = drop.find_next(
+            'div',
+            {'class': 'calendar-list-event__name'}
+        ).get_text().strip()
+
+        twitter = drop.find_next(
+            'div',
+            {'class': 'calendar-list-event__properties'}
+        ).find_next(
+            'div',
+            {'class': 'eca-flex'}
+        ).get_text().strip()[14:]
+
+        time = drop.find_next(
+            'span',
+            {'class' : 'calendar-list-event__time'}
+        ).find_next('span').get_text().strip()
+
+        long_description = drop.find_next(
+            'div',
+            {'class': 'calendar-event-details__long-description'}
+        )
+
+        paragraphs = long_description.find_all('p')
+
+        print(long_description.get_text().strip())
+
+        try:
+            supply = paragraphs[2].get_text().split(' ')[1].strip()
+            price = paragraphs[3].get_text().strip()[7:]
+            website = paragraphs[5].get_text().strip()[9:]
+            discord = paragraphs[6].get_text().strip()[9:]
+        except Exception:
+            supply = None
+            price = None
+            website = None
+            discord = None
+            print('Error parsing long description.')
+
+        return {
+            'name': name,
+            'twitter': twitter,
+            'time': time,
+            'supply': supply,
+            'price': price,
+            'website': website,
+            'discord': discord
+        }
+
 
 if __name__ == '__main__':
     app = WebScraper()
 
     try:
-        app.today_dops()
+        drops = app.drops_for_today()
+        print(drops)
     finally:
         print('Bye bye!')
         app.driver.quit()
