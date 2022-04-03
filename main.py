@@ -29,7 +29,7 @@ async def todays_drops(ctx: interactions.CommandContext, day: int = None):
 
     drops = scraper.drops_for_today(day)
     drops_json = '```json\n' + json.dumps(drops, indent=2) + '\n```'
-    await ctx.send(f"Drops for today:\n{drops_json}")
+    await ctx.send(f"Here are the drops you asked for:\n{drops_json}")
 
 
 bot.start()
