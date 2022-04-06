@@ -28,6 +28,10 @@ async def todays_drops(ctx: interactions.CommandContext, day: int = None):
     await ctx.send('This might take a little while. Have a coffee in the meantime :wink:')
 
     drops = scraper.drops_for_today(day)
+    if drops is None:
+        ctx.send("I wasn't able to fetch the information on time. Sorry :slight_frown:")
+        return None
+
     drops_json = '```json\n' + json.dumps(drops, indent=2) + '\n```'
     await ctx.send(f"Here are the drops you asked for:\n{drops_json}")
 

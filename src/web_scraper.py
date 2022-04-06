@@ -36,13 +36,16 @@ class WebScraper:
             self.today = date.today().day
 
         page_source = self.__fetch_site_html()
+
+        if page_source is None:
+            return None
         # with open('pagesource2.html', 'r') as file:
             # page_source = file.read()
 
         drops_information = self.__drops_information_from_page_source(
             page_source=page_source)
 
-        # self.driver.close()       # check why this wasn't working
+        self.driver.close()       # check why this wasn't working
 
         return drops_information
 
@@ -62,8 +65,8 @@ class WebScraper:
             print('Information found!')
         except TimeoutException:
             print('Loading took to much time')
-            self.driver.quit()
-            return
+            self.driver.close()
+            return None
 
         # click on the div to get all the information on the drop
         for elem in self.driver.find_elements(By.CLASS_NAME, 'calendar-list-event'):
