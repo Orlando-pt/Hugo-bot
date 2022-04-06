@@ -1,0 +1,13 @@
+[Unit]
+Description=Discord bot with information about cnft drops.
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+Environment="DISCORD_TOKEN=TODO"
+Environment="DISCORD_GUILD=TODO"
+ExecStart=/home/ubuntu/Hugo-bot/venv/bin/python3 /home/ubuntu/Hugo-bot/main.py
+
+[Install]
+WantedBy=multi-user.target
